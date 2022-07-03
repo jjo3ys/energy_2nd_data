@@ -79,7 +79,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
 df = pd.read_csv("augumentationed_data.csv", index_col=None)
-y = pd.read_csv('외기온도.csv', index_col=None)['온도']
+y = pd.read_csv('degree_data.csv', index_col=None)['온도']
 x = df.drop('날짜', axis=1)
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, test_size=0.2)
@@ -90,8 +90,8 @@ y_predict = MLR.predict(x_test)
 
 import matplotlib.pyplot as plt
 plt.scatter(y_test, y_predict, alpha=0.4)
-plt.xlabel("Actual Rent")
-plt.ylabel("Predicted Rent")
+plt.xlabel("Actual Degree")
+plt.ylabel("Predicted Degree")
 plt.title("MULTIPLE LINEAR REGRESSION")
 plt.savefig('Result.png')
 
