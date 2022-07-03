@@ -1,3 +1,8 @@
+# csv or excel file
+*.csv
+*.xlsx
+!augumentationed_data.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
