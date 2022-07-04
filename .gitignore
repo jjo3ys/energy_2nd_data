@@ -3,6 +3,7 @@
 *.xlsx
 !augumentationed_data.csv
 !degree_data.csv
+!temperature.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
