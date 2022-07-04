@@ -1,3 +1,6 @@
+# and so on...
+*.zip
+
 # csv or excel file
 *.csv
 *.xlsx

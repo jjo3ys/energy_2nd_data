@@ -76,5 +76,3 @@ def temperature_model(save=False):
         result_df['pred_temp'] = y_predict
 
         result_df.to_csv("Temp_Model_Result.csv", index=None)
-
-return_degree_model(save=True)
