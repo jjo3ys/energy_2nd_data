@@ -7,9 +7,16 @@ from sklearn.linear_model import LinearRegression
 df1 = pd.read_csv("augumentationed_data.csv", index_col=None)
 
 def return_degree_model(save=False):
-    df2 = pd.read_csv("degree_data.csv", index_col=None)
+    # df2 = pd.read_csv("degree_data.csv", index_col=None)
+    df2 = pd.read_csv("real_temp.csv", index_col=None)
+
+    df1['날짜'] = pd.to_datetime(df1['날짜'])
+    df2['날짜'] = pd.to_datetime(df2['날짜'])
 
     df = pd.merge(df1, df2, how='left')
+    df['날짜'] = pd.to_datetime(df['날짜'])
+    df = df[df['날짜'].dt.dayofweek <=4]
+    df = df.dropna()
 
     x = df.drop('환수온도', axis=1)
     y = df['환수온도']
@@ -28,9 +35,9 @@ def return_degree_model(save=False):
     plt.xlabel("Actual Return Degree")
     plt.ylabel("Predicted Return Degree")
     plt.title("MULTIPLE LINEAR REGRESSION")
-    plt.savefig('Return_Degree_Result.png')
+    plt.savefig('Return_Degree_Result_with_Real_Temp.png')
 
-    print('R**2 : {}%'.format(round(1-(((y_test-y_predict)**2).sum()/((y-y.mean())**2).sum()), 4)*100))
+    print('R**2 : {}%'.format(round(1-(((y_test-y_predict)**2).sum()/((y_test-y_test.mean())**2).sum()), 4)*100))
 
     if save:
         result_df = pd.DataFrame()
@@ -42,7 +49,7 @@ def return_degree_model(save=False):
 
         result_df = result_df.sort_index()
 
-        result_df.to_csv("Return_Model_Result.csv", index=None)
+        result_df.to_csv("Return_Model_Result_with_Real_Temp.csv", index=None, encoding='cp949')
 
 def temperature_model(save=False):
     df2 = pd.read_csv("temperature.csv", index_col=None)
@@ -65,7 +72,7 @@ def temperature_model(save=False):
     plt.title("MULTIPLE LINEAR REGRESSION")
     plt.savefig('Temperature_Result.png')
 
-    print('R**2 : {}%'.format(round(1-(((y_test-y_predict)**2).sum()/((y-y.mean())**2).sum()), 4)*100))
+    print('R**2 : {}%'.format(round(1-(((y_test-y_predict)**2).sum()/((y_test-y_test.mean())**2).sum()), 4)*100))
 
     if save:
         result_df = pd.DataFrame()
@@ -75,4 +82,4 @@ def temperature_model(save=False):
         result_df['real_temp'] = y_test
         result_df['pred_temp'] = y_predict
 
-        result_df.to_csv("Temp_Model_Result.csv", index=None)
+        result_df.to_csv("Temp_Model_Result.csv", index=None, encoding='cp949')
