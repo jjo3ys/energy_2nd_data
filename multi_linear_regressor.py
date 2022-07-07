@@ -1,5 +1,5 @@
 import joblib
-
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -73,6 +73,9 @@ def temperature_model(save=False):
     df2 = pd.read_csv("temperature.csv", index_col=None)
 
     df = pd.merge(df1, df2, how='left')
+    df = pd.merge(df1, df2, how='left')
+    df['날짜'] = pd.to_datetime(df['날짜'])
+    df = df[df['날짜'].dt.dayofweek <=4]
 
     x = df.drop(['날짜', '온도'], axis=1)
     y = df['온도']
@@ -103,9 +106,10 @@ def temperature_model(save=False):
 
         result_df.to_csv("Temp_Model_Result.csv", index=None, encoding='cp949')
     
-def q_model():
+def q_model(save=False):
     df2 = pd.read_csv("temperature.csv", index_col=None)
     df = pd.merge(df1, df2, how='left')
+    total_df = pd.DataFrame()
 
     buildings = ['공과대학', 
                  '공동실험실습관', 
@@ -129,19 +133,39 @@ def q_model():
 
     for b, w in zip(buildings, wf):
         building_data[b] = total_wf*w/sum(wf)
-    
     for b in buildings:
-        df[b+'_Wf'] = building_data[b]
-        x = df[[b+'_Wf', b+'_supply', '온도']]
-        y = df[b+'_return']
+        model_df = pd.DataFrame()
+        model_df[b+'_Wf'] = [building_data[b] for i in range(len(df))]
+        model_df[b+'_supply'] = df[b+'_supply']
+        model_df['온도'] = df['온도']
+        model_df[b+'_return'] = df[b+'_return']
 
-        x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, test_size=0.2)
+        real_return = model_df[b+'_return'].to_numpy().tolist()
+        return_list = [None for i in range(len(real_return))]
+        for i in range(1, len(real_return)):
+            return_list[i] = real_return[i-1]
+
+        model_df[b+'last_return'] = return_list
+
+        model_df = model_df.dropna()
+        x = model_df[[b+'_Wf', b+'_supply', '온도', b+'last_return']]
+        y = model_df[b+'_return']
+
+        x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, test_size=0.2, random_state=32)
 
         MLR = LinearRegression()
         MLR.fit(x_train, y_train)
-
+        
         y_predict = MLR.predict(x_test)
-
-
         print('{} R**2 : {}%'.format(b, round(1-(((y_test-y_predict)**2).sum()/((y_test-y_test.mean())**2).sum()), 4)*100))
-q_model()
+
+        if save:
+            total_df[b+'Real_supply'] = x_test[b+'_supply']
+            total_df[b+'Real_return'] = y_test   
+            total_df[b+'Pred_return'] = y_predict
+
+            total_df['온도'] = x_test['온도']
+            total_df = total_df.sort_index()
+            if not os.path.exists('Return degree models'):
+                os.mkdir('Return degree models')
+            total_df.to_csv("Return degree models\\{}_Return.csv".format(b), index=None, encoding='cp949')
