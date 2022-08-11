@@ -27,7 +27,7 @@ def return_degree_model(save=False, load=False):
 
     df = df.dropna()
 
-    x = df.drop('환수온도', axis=1)
+    x = df.drop(['환수온도', '공급온도'], axis=1)
     y = df['환수온도']
     if not load:
         x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.8, test_size=0.2)
@@ -169,3 +169,60 @@ def q_model(save=False):
             if not os.path.exists('Return degree models'):
                 os.mkdir('Return degree models')
             total_df.to_csv("Return degree models\\{}_Return.csv".format(b), index=None, encoding='cp949')
+
+def calc_rt(rt, wf, supply):
+    return (rt*3024)/(wf*60) + supply
+
+def load():
+    buildings = ['공과대학', 
+                 '공동실험실습관', 
+                 '교수회관', 
+                 '대학본부', 
+                 '도서관', 
+                 '동북아경제통상', 
+                 '복지회관', 
+                 '사회법과대학', 
+                 '예체능대학', 
+                 '인문대학', 
+                 '자연대학', 
+                 '정보기술대학', 
+                 '정보전산원', 
+                 '컨벤션센터', 
+                 '학생복지회관']
+    wf = [3986.28, 1209.48, 848.66, 1259.43, 1531.40, 863.21, 1151.27, 102.52, 435.12, 935.72, 2013.41, 1212.51, 211.61, 481.76, 593.70]
+    total_rt = 1500
+    list1_ = df1.drop('날짜', axis=1).to_numpy().tolist()[55]
+
+    last_return = pd.read_csv("real_temp.csv", index_col=None).to_numpy().tolist()[54][2]
+
+    supply_list = []
+    for i in range(len(list1_)):
+        if i%2 ==0: supply_list.append(list1_[i])
+
+    case1 = []
+    case1_rt = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 800, 50]
+    for i in range(len(wf)):
+        return_rt = calc_rt(case1_rt[i], wf[i], supply_list[i])
+        case1.append(supply_list[i])
+        case1.append(return_rt)
+
+    case1.append(last_return)
+
+    case2 = []
+    case2_rt = [800, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
+
+    for i in range(len(wf)):
+        return_rt = calc_rt(case2_rt[i], wf[i], supply_list[i])
+        case2.append(supply_list[i])
+        case2.append(return_rt)
+    case2.append(last_return)
+
+    for i, building in enumerate(buildings):
+        print('{} 공급온도: {}, case1 환수온도: {}, case2 환수온도: {}'.format(building, round(supply_list[i], 2), round(case1[i*2+1], 2), round(case2[i*2+1], 2)))
+
+    model = joblib.load('ReturnDegreeModel.pkl')
+    case1_pred = model.predict([case1])
+    case2_pred = model.predict([case2])
+    
+    print(case1_pred, case2_pred)
+load()
